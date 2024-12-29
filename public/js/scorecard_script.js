@@ -9,6 +9,68 @@ let bowling_comp = ["That was a beauty!", "What a delivery!", "That was a peach!
 let caught_comp = ["Great catch!", "Brilliant catch!", "What a grab!", "That's a screamer!", "Great effort!", "Well-judged catch!", "Excellent fielding!", "That's a stunner!", "What a catch!"];
 let run_out_comp = ["Brilliant fielding!", "What a run-out!", "That was precision!", "You made it look so easy!", "Excellent throw!", "Great work in the field!", "Superb fielding effort!", "Top-class fielding!", "Outstanding effort!"];
 
+
+// Add these functions at the beginning of the file
+function savePrediction(probability) {
+    localStorage.setItem('matchPrediction', probability);
+}
+
+function loadPrediction() {
+    const savedPrediction = localStorage.getItem('matchPrediction');
+    if (savedPrediction) {
+        updatePredictionUI(parseFloat(savedPrediction));
+    }
+}
+
+// Modify the updatePredictionUI function
+function updatePredictionUI(probability) {
+    const formattedProbability = (probability * 100).toFixed(2);
+    $("#prediction-percentage").text(`${formattedProbability}%`);
+    $("#prediction-bar").css('width', `${formattedProbability}%`);
+    // Save the prediction when updating UI
+    savePrediction(probability);
+}
+
+// Modify the existing callPredictionAPI function
+async function callPredictionAPI(data) {
+    try {
+        const response = await fetch('http://localhost:5000/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        updatePredictionUI(result.win_probability);
+        return result.win_probability;
+        
+    } catch (error) {
+        console.error('Error calling Prediction API:', error);
+        // Load last saved prediction in case of API error
+        loadPrediction();
+    }
+}
+
+// Modify the updatePrediction function
+async function updatePrediction() {
+    const predictionData = calculatePredictionData();
+    const probability = await callPredictionAPI(predictionData);
+    if (probability !== undefined) {
+        savePrediction(probability);
+    }
+}
+
+// Add this to window.onload to ensure prediction is shown even after reloads
+window.onload = function() {
+    loadPrediction();
+};
+
 // adding run buttons
 for (let i = 0; i < 10; i++) {
 	if (i == 1)
@@ -51,6 +113,7 @@ $(document).ready(async (event) => {
 		$('.share-link').css('right', '30px');
 		$('.advertisement').show();
 		window.setTimeout(() => window.location.reload(), 10000);
+		loadPrediction();
 	} else {
 		await fetch(`/live-scorecard/${id}/check-match`, {
 			method: 'POST',
@@ -389,6 +452,7 @@ async function fetch_players_popup(team, status) {
 					}).then(async (result) => {
 						if (result.isDenied) {
 							retired_hurt = true;
+							await updatePrediction();
 							await check_end_match();
 							await check_end_of_innings();
 						}
@@ -692,6 +756,7 @@ $(".runs-area").eq(0).find(".run-btn, .custom-tick").click(async function () {
 						showConfirmButton: false,
 						timer: 1500
 					}).then(async function () {
+						await updatePrediction();
 						await check_end_match();
 						await check_end_of_innings();
 						if (overs % 1 == 0)
@@ -751,6 +816,7 @@ $(".extras-dropdown").find(".run-btn, .custom-tick").click(async function (event
 							showConfirmButton: false,
 							timer: 1500
 						}).then(async function () {
+							await updatePrediction();
 							await check_end_match();
 							await check_end_of_innings();
 							window.location.reload();
@@ -788,6 +854,7 @@ $(".extras-dropdown").find(".run-btn, .custom-tick").click(async function (event
 							showConfirmButton: false,
 							timer: 1500
 						}).then(async function () {
+							await updatePrediction();
 							await check_end_match();
 							await check_end_of_innings();
 							if (overs % 1 == 0)
@@ -991,6 +1058,7 @@ $(".wickets-area .wicket-btn").click(async function (event) {
 											showConfirmButton: false,
 											timer: 1500
 										}).then(async function () {
+											await updatePrediction();
 											await check_end_match();
 											await check_end_of_innings();
 											if (overs % 1 == 0)
@@ -1025,6 +1093,7 @@ $(".wickets-area .wicket-btn").click(async function (event) {
 											showConfirmButton: false,
 											timer: 1500
 										}).then(async function () {
+											await updatePrediction();
 											await check_end_match();
 											await check_end_of_innings();
 											await fetch_players_popup(batting_team, "NEXT BATSMAN").then(() => $(".overlay").css("display", "flex"));
@@ -1071,6 +1140,7 @@ $(".wickets-area .wicket-btn").click(async function (event) {
 								showConfirmButton: false,
 								timer: 1500
 							}).then(async function () {
+								await updatePrediction();
 								await check_end_match();
 								await check_end_of_innings();
 								await fetch_players_popup(batting_team, "NEXT BATSMAN").then(() => $(".overlay").css("display", "flex"));
@@ -1111,6 +1181,7 @@ $(".wickets-area .wicket-btn").click(async function (event) {
 								showConfirmButton: false,
 								timer: 1500
 							}).then(async function () {
+								await updatePrediction();
 								await check_end_match();
 								await check_end_of_innings();
 								await fetch_players_popup(batting_team, "NEXT BATSMAN").then(() => $(".overlay").css("display", "flex"));
@@ -1180,6 +1251,7 @@ $(".wickets-area .wicket-btn").click(async function (event) {
 								showConfirmButton: false,
 								timer: 1500
 							}).then(async function () {
+								await updatePrediction();
 								await check_end_match();
 								await check_end_of_innings();
 								if (overs % 1 == 0)
@@ -1208,4 +1280,69 @@ $(".share-link").click(() => {
 		})
 });
 
-$("#live").click(() => window.location.reload())
+// Add this function to calculate required data for prediction
+function calculatePredictionData() {
+    let currentOvers = parseFloat(overs.toFixed(1));
+    let totalOvers = parseFloat($(".overs .info").html());
+    let currentRunRate = (overs == 0 ? 0 : runs / (parseInt(overs.toFixed(1).split('.')[0]) + over_counter / 6));
+    
+    let predictionData = {
+        runs: runs,
+        wickets: wickets,
+        overs: currentOvers,
+        target: inning == 2 ? target : 0,
+        run_rate: currentRunRate,
+        remaining_runs: inning == 2 ? target - runs : 0,
+        remaining_overs: inning == 2 ? totalOvers - currentOvers : 0,
+        required_run_rate: inning == 2 ? 
+            ((target - runs) / (totalOvers - currentOvers)) : 0
+    };
+    
+    return predictionData;
+}
+
+// Add this function to update UI with prediction result
+function updatePredictionUI(probability) {
+    // Round to 2 decimal places
+	
+    const formattedProbability = (probability * 100).toFixed(2);
+
+	console.log(formattedProbability);
+    
+    // Update prediction text
+    $("#prediction-percentage").text(`${formattedProbability}%`);
+    
+    // Update prediction bar
+    $("#prediction-bar").css('width', `${formattedProbability}%`);
+}
+
+// Modify the existing API call function
+async function callPredictionAPI(data) {
+    try {
+        const response = await fetch('http://localhost:5000/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        updatePredictionUI(result.win_probability);
+        
+    } catch (error) {
+        console.error('Error calling Prediction API:', error);
+    }
+}
+
+// Add prediction update calls to existing event handlers
+async function updatePrediction() {
+    const predictionData = calculatePredictionData();
+    await callPredictionAPI(predictionData);
+}
+
+

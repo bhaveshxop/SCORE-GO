@@ -909,3 +909,53 @@ nav {
 .share-link:active {
     transform: scale(0.95);
 }
+
+.prediction-section {
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
+.prediction-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.progress-bar-container {
+    width: 100%;
+    background-color: #ddd;
+    height: 20px;
+    border-radius: 10px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 50%; /* You can dynamically change this with JavaScript */
+    background-color: #4CAF50;
+    border-radius: 10px;
+    text-align: center;
+    line-height: 20px;
+    color: white;
+    font-weight: bold;
+    transition: width 0.5s;
+}
+.prediction-container {
+    margin: 10px 0;
+}
+
+.prediction-bar-container {
+    width: 100%;
+    height: 20px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#prediction-bar {
+    height: 100%;
+    width: 0;
+    background-color: #4153f1;
+    transition: width 0.5s ease-in-out;
+}
