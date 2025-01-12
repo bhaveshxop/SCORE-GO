@@ -46,5 +46,5 @@ app.get("/aside", (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`SCORE-GO listening on http://localhost:${port}`)
+    console.log(` listening on http://localhost:${port}`)
 })

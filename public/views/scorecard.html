@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCORE-GO - Live Scorecard</title>
+    <title>SCORE-SIZZLE - Live Scorecard</title>
     <link rel="icon" href="../img/brand.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.1/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -183,7 +183,7 @@
             </section>
             <section class="advertisement">
                 <div id="l1">YOU TOO CAN CREATE AN SHARE YOUR OWN CRICKET SCORECARDS</div>
-                <div id="l2">Join SCORE-GO Now!</div>
+                <div id="l2">Join SCORE-SIZZLE Now!</div>
                 <a href="/get-started" target="_blank"><button class="getStartedButton">Get Started</button></a>
             </section>
         </section>
@@ -253,17 +253,28 @@
             <div class="timeline-container">
                 <div id="scroller"></div>
             </div>
-        </section>
+        </section>    
+        
     </section>
-    
-    <section class="prediction-section">
-        <div class="prediction-container">
-            <div id="prediction-percentage">0%</div>
+    <section class="prediction-section" id="prediction">
+        <div class="prediction-container" id="prediction-container">
+            <div id="prediction-percentage">
+                <div class="team-probability">
+                    <div class="team-name-1" id="team1"></div>
+                    <div class="probability-value" id="team-a-probability">50%</div>
+                </div>
+                <div class="separator"></div>
+                <div class="team-probability">
+                    <div class="team-name-2" id="team2"></div>
+                    <div class="probability-value" id="team-b-probability">50%</div>
+                </div>
+            </div>
             <div class="prediction-bar-container">
                 <div id="prediction-bar"></div>
             </div>
         </div>
     </section>
+    
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.1/dist/sweetalert2.all.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>

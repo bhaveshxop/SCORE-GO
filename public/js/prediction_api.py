@@ -4,29 +4,23 @@ import numpy as np
 import pandas as pd
 from flask_cors import CORS
 
-
-# Initialize the Flask application
-
-# Enable CORS for all routes
-
-# Your existing routes and logic here
-
-
 # Initialize the Flask application
 app = Flask(__name__)
 CORS(app)
 
-# Load the trained model
 with open("cricket_model.pkl", "rb") as f:
-    model = pickle.load(f)
+    model_artifacts = pickle.load(f)
+
+model = model_artifacts['model']
+scaler = model_artifacts['scaler']
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Get the input data from the request
     try:
+     
         data = request.get_json()
+        print("Received data:", data)
 
-        # Create a DataFrame with feature names to match training data
         features = pd.DataFrame([{
             'runs': data['runs'],
             'wickets': data['wickets'],
@@ -37,15 +31,55 @@ def predict():
             'remaining_overs': data['remaining_overs'],
             'required_run_rate': data['required_run_rate']
         }])
+        
+    
+        features = features[model_artifacts['feature_names']]
 
-        # Get prediction
-        prediction = model.predict(features)[0]
+        features_scaled = scaler.transform(features)
 
-        # Return the prediction as JSON response
-        return jsonify({'win_probability': prediction})
+    
+        prediction = model.predict(features_scaled)[0]
+        
+        prediction = np.clip(prediction, 0, 1)
+        
+        prediction = round(float(prediction), 3)
+
+        response = {
+            'win_probability': prediction,
+            'status': 'success',
+            'message': 'Prediction successful'
+        }
+        
+        print("Response:", response)
+        return jsonify(response)
+    
+    except KeyError as e:
+        error_msg = f"Missing required feature: {str(e)}"
+        print("Error:", error_msg)
+        return jsonify({
+            'status': 'error',
+            'message': error_msg,
+            'error_type': 'KeyError'
+        }), 400
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        error_msg = f"Prediction error: {str(e)}"
+        print("Error:", error_msg)
+        return jsonify({
+            'status': 'error',
+            'message': error_msg,
+            'error_type': type(e).__name__
+        }), 400
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Service is running'
+    })
 
 if __name__ == '__main__':
+    print("Model loaded successfully")
+    print("Feature names:", model_artifacts['feature_names'])
+    print("Server starting...")
     app.run(debug=True)
